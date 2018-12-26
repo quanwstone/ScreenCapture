@@ -314,6 +314,9 @@ void CTest_CapDlg::OnTimer(UINT_PTR nIDEvent)
 
 		::ReleaseDC(NULL,hdcold);
 
+		if(pbyBmpTemp)
+			delete[] pbyBmpTemp;
+
 		break;
 		}
 	default:
