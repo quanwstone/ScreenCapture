@@ -6,6 +6,8 @@
 #include "Test_Cap.h"
 #include "Test_CapDlg.h"
 #include "afxdialogex.h"
+#include<conio.h>
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -78,6 +80,17 @@ BOOL CTest_CapDlg::SetLayeredWindowAttributes(HWND hwnd,COLORREF crKey,BYTE bAlp
 	FreeLibrary(hmod);
 	return bReturn;
 }
+BOOL WINAPI ConsoleHandler (DWORD CEvent)
+{
+	switch(CEvent)
+	{
+	case CTRL_CLOSE_EVENT:
+		break;
+	case CTRL_SHUTDOWN_EVENT:
+		break;
+	}
+	return TRUE;
+}
 
 BOOL CTest_CapDlg::OnInitDialog()
 {
@@ -109,12 +122,24 @@ BOOL CTest_CapDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	
+	//AllocConsole();
+	//SetConsoleCtrlHandler(ConsoleHandler,TRUE);
+
+	m_pbyBmpTemp = NULL;
+	m_bFirst = true;
+	m_iFrameCount = 0;
+
+	QueryPerformanceFrequency(&m_Frequency);
+
 	//设置窗体透明   
 	LONG t = GetWindowLong(m_hWnd, GWL_EXSTYLE);
-	
+
 	t |= WS_EX_LAYERED;
-	
+
 	SetWindowLong(m_hWnd, GWL_EXSTYLE, t);
+	
+	//this->SetWindowPos(&CWnd::wndTopMost,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 	//
 	SetTimer(0,20,NULL);
 
@@ -247,8 +272,40 @@ void CTest_CapDlg::OnTimer(UINT_PTR nIDEvent)
 		CBitmap* pBmp = CBitmap::FromHandle(hBitmap);
 
 		DWORD dwCopyLen = pBmp->GetBitmapBits(iBmpLenTemp, pbyBmpTemp);
+		
+		if(m_bFirst)
+		{
+			m_bFirst = false;
+			
+			m_pbyBmpTemp = new BYTE[iBmpLenTemp];
 
-		//
+			memset(m_pbyBmpTemp,0,iBmpLenTemp);
+
+			memcpy(m_pbyBmpTemp,pbyBmpTemp,iBmpLenTemp);
+
+			QueryPerformanceCounter(&m_StatTime);
+		}
+
+		QueryPerformanceCounter(&m_EndTime);
+		
+		double time = (m_EndTime.QuadPart - m_StatTime.QuadPart) / m_Frequency.QuadPart;
+		
+		if(time >= 1)
+		{
+			//printf("",);
+			TRACE("Frame = %d\n",m_iFrameCount);
+
+			QueryPerformanceCounter(&m_StatTime);
+			m_iFrameCount = 0;		
+		}
+
+		if(strcmp((char*)pbyBmpTemp,(char *)m_pbyBmpTemp) !=0)
+		{
+			memcpy(m_pbyBmpTemp,pbyBmpTemp,iBmpLenTemp);
+
+			m_iFrameCount++;
+		}
+
 		bool br = SaveBmpFile(bitmap.bmWidth,bitmap.bmHeight,32,(const char*)pbyBmpTemp,L"c:\\quanwei\\BMP\\1.bmp",dwCopyLen);
 
 		DeleteObject(hBitmap);

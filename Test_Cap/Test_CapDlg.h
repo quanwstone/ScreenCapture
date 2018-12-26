@@ -35,4 +35,13 @@ protected:
 	bool SaveBmpFile(short sFrameWidth,short sFrameHeight,short sColorSpace,const char *apBmpData, TCHAR *pFileName,DWORD dwLen);
 
 	BOOL SetLayeredWindowAttributes(HWND hwnd,COLORREF crKey,BYTE bAlpha,DWORD dwFlags);
+
+public:
+	BYTE	*m_pbyBmpTemp ;
+	bool	m_bFirst;
+	int		m_iFrameCount;
+	LARGE_INTEGER m_StatTime;
+	LARGE_INTEGER m_EndTime;
+	LARGE_INTEGER m_Frequency;
+
 };
